@@ -92,6 +92,7 @@ declaration(Z) --> "char", whitespace, chars(A),"[]", whitespace, "=", whitespac
 % Bia³e znaki.
 whitespace --> " ", whitespace.
 whitespace --> "\t", whitespace.
+whitespace --> "\n", whitespace.
 whitespace --> "".
 
 %liczby ca³kowite
