@@ -1,6 +1,6 @@
 
  execute :-
-        readFromFile("f:\\Studia\\Dropbox\\sem VI\\SI\\input.txt", R),
+        readFromFile("C:\\Users\\Filip\\Documents\\GitHub\\Przetwornik-DCG-C-do-asm\\Plik .pl\\input.txt", R),
         program(Z, R, []),
 	write(Z), !.
 
@@ -13,29 +13,60 @@ readFromFile(File, Output) :-
 
 %tymczasowe wywolanei dla testów
 
-program(Z) --> add(Za), {concat_atom([Za], Z)}.
+%program(Z) --> add(Za), {concat_atom([Za], Z)}.
 
-program(Z) --> sub(Za), {concat_atom([Za], Z)}.
+%program(Z) --> sub(Za), {concat_atom([Za], Z)}.
 
-program(Z) --> div(Za), {concat_atom([Za], Z)}.
+%program(Z) --> div(Za), {concat_atom([Za], Z)}.
 
-program(Z) --> mul(Za), {concat_atom([Za], Z)}.
+%program(Z) --> mul(Za), {concat_atom([Za], Z)}.
 
-program(Z) --> inc(Za), {concat_atom([Za], Z)}.
+%program(Z) --> inc(Za), {concat_atom([Za], Z)}.
 
-program(Z) --> dec(Za), {concat_atom([Za], Z)}.
+%program(Z) --> dec(Za), {concat_atom([Za], Z)}.
 
-program(Z) --> if(Za), {concat_atom([Za], Z)}.
+%program(Z) --> if(Za), {concat_atom([Za], Z)}.
 
+%program(Z) --> declaration(Za), {concat_atom([Za], Z)}.
 
-code(Z) --> declaration(Z1), whitespace, {concat_atom([Z1], Z)}.
-code(Z) --> declaration(Z).
-code(Z) --> declaration(Z), code(Z).
+program(Z) --> func(Z1), {concat_atom([Z1],Z)}.
 
-%operacje arytmetyczne
-%dodawanie
+%operacje w funkcjach
+
+func(Z) --> type_name,whitespace,chars(Z1),whitespace,"()",whitespace, "{", whitespace, func_exp_s(Z2),whitespace,"}", {concat_atom([Z1,':\n', Z2], Z)}.
+
+% func_exp(Z) --> declaration(Z1),whitespace, if(Z2),
+% {concat_atom([Z1,Z2],Z)}.
+
+% func_exp(Z) --> func_exp(Z1), whitespace, func_exp(Z2),
+% {concat_atom([Z1,Z2],Z)}.
+
+func_exp_s(Z) --> func_exp(Za),whitespace, func_exp(Zb), {concat_atom([Za,Zb], Z)}.
+
+func_exp_s(Z) --> func_exp(Za), {concat_atom([Za],Z)}.
+
+func_exp(Z) --> declaration(Za), {concat_atom([Za], Z)}.
+func_exp(Z) --> declaration(Za), whitespace, func_exp(Zb),  {concat_atom([Za,Zb], Z)}.
+
+func_exp(Z) --> if(Za), {concat_atom([Za], Z)}.
+func_exp(Z) --> if(Za),whitespace,func_exp(Zb), {concat_atom([Za,Zb], Z)}.
+
+func_exp(Z) --> exp(Za), {concat_atom([Za],Z)}.
+func_exp(Z) --> exp(Za), func_exp(Zb), {concat_atom([Za,Zb],Z)}.
+%wywo³ywanie funkcji - nie dzia³a
+%func_exp(Z) --> func_execute(Za),{concat_atom([Za],Z)}.
+% func_exp(Z) --> func_execute(Za), func_exp(Zb),
+% {concat_atom([Za,Zb],Z)}.
+
+% func_execute(Z) --> chars(Za),"();",{concat_atom(['\ncall
+% ',Za,"\n"],Z)}. operacje arytmetyczne dodawanie
 
 add(Z) --> whitespace, chars(C), whitespace, "=",whitespace, chars(A),whitespace,add_op,whitespace, chars(B),whitespace,";", {concat_atom(['\nmov eax, [',A,']\nadd eax, [',B,']\nmov [',C,'], eax\n'],Z)}.
+
+add(Z) --> whitespace, chars(C), whitespace, "=",whitespace, integer_number(A),whitespace,add_op,whitespace, chars(B),whitespace,";", {concat_atom(['\nmov eax, [',A,']\nadd eax, [',B,']\nmov [',C,'], eax\n'],Z)}.
+
+add(Z) --> whitespace, chars(C), whitespace, "=",whitespace, integer_number(A),whitespace,add_op,whitespace, integer_number(B),whitespace,";", {concat_atom(['\nmov eax, [',A,']\nadd eax, [',B,']\nmov [',C,'], eax\n'],Z)}.
+
 
 sub(Z) --> whitespace, chars(C), whitespace, "=",whitespace, chars(A),whitespace,sub_op,whitespace, chars(B),whitespace,";", {concat_atom(['mov eax, [',A,']\nsub eax, [',B,']\nmov [',C,'], eax\n'],Z)}.
 
@@ -47,9 +78,12 @@ inc(Z) --> whitespace, chars(A), whitespace, add_op, add_op, whitespace, {concat
 
 dec(Z) --> whitespace, chars(A), whitespace, sub_op, sub_op, whitespace, {concat_atom(['mov eax, [',A,']\ndec eax'],Z)}.
 
+equal(Z) --> whitespace, chars(A), whitespace, "=", whitespace, chars(B), ";", {concat_atom(['mov eax, [',A,']\nmov eax, [',B,']'],Z)}.
+
+equal(Z) --> whitespace, chars(A), whitespace, "=", whitespace, integer_number(B), ";", {concat_atom(['mov eax, [',A,']\nmov eax, ',B],Z)}.
+
 %instrukcje warunkowe
 if(Z) --> "if",whitespace,"(",whitespace,if_cond(Za),whitespace,")",whitespace,"{",whitespace,exp_if(Zb),whitespace,"}", {concat_atom([Za,Zb],Z)}.
-% wyra¿enie które ma siê wykonywaæ w if {} póki co jest za³o¿eniem operacji dodawania
 %zak³adam, ¿e mo¿emy porównywaæ tylko liczby w postaci if(x>5)
 
 %if(x>5)
@@ -77,17 +111,42 @@ cond_op_equal_to --> "==".
 
 % exp to ka¿de mo¿liwe wyra¿enie, które siê moze pojawiæ, nale¿a³oby
 % zdefiniowaæ kilka(naœcie lub set) mo¿liwoœci
-%
-exp_if(Z) --> exp(Za), {concat_atom(['\n\nklamra:',Za],Z)}.
 
+exp_if(Z) --> exp(Za),whitespace, exp(Zb), {concat_atom(['\n\nklamra:\n',Za,'\n',Zb],Z)}.
+
+exp_if(Z) --> exp(Za), {concat_atom(['\n\nklamra:\n',Za],Z)}.
+
+%exp(Z) --> exp(Zb), whitespace, {concat_atom([Zb],Z)}.
 exp(Z) --> add(Za), {concat_atom([Za], Z)}.
+exp(Z) --> add(Za), exp(Zb), {concat_atom([Za,'\n',Zb], Z)}.
 
+exp(Z) --> sub(Za), {concat_atom([Za], Z)}.
+exp(Z) --> sub(Za), exp(Zb), {concat_atom([Za,'\n',Zb], Z)}.
 
-declaration(Z) --> "int", whitespace, chars(A), whitespace, "=", whitespace, integer_number(B), whitespace,";",       {concat_atom([A,': dd ',B],Z)}.
+exp(Z) --> inc(Za), {concat_atom([Za], Z)}.
+exp(Z) --> inc(Za), exp(Zb), {concat_atom([Za,'\n',Zb], Z)}.
 
-declaration(Z) --> "char", whitespace, chars(A), whitespace, "=", whitespace, "'", char(B), "'", whitespace,";",       {concat_atom([A,': db ','"',B,'"'],Z)}.
+exp(Z) --> dec(Za), {concat_atom([Za], Z)}.
+exp(Z) --> dec(Za), exp(Zb), {concat_atom([Za,'\n',Zb], Z)}.
 
-declaration(Z) --> "char", whitespace, chars(A),"[]", whitespace, "=", whitespace, "'", string(B), "'", whitespace,";",       {concat_atom([A,': db ','"',B,'",0'],Z)}.
+exp(Z) --> div(Za), {concat_atom([Za], Z)}.
+exp(Z) --> div(Za), exp(Zb), {concat_atom([Za,'\n',Zb], Z)}.
+
+exp(Z) --> mul(Za), {concat_atom([Za], Z)}.
+exp(Z) --> mul(Za), exp(Zb), {concat_atom([Za,'\n',Zb], Z)}.
+
+exp(Z) --> equal(Za), {concat_atom([Za], Z)}.
+exp(Z) --> equal(Za), exp(Zb), {concat_atom([Za,'\n',Zb], Z)}.
+
+type_name --> "int".
+type_name --> "char".
+type_name --> "void".
+
+declaration(Z) --> "int", whitespace, chars(A), whitespace, "=", whitespace, integer_number(B), whitespace,";",       {concat_atom(['\n',A,': dd ',B],Z)}.
+
+declaration(Z) --> "char", whitespace, chars(A), whitespace, "=", whitespace, "'", char(B), "'", whitespace,";",       {concat_atom(['\n',A,': db ','"',B,'"'],Z)}.
+
+declaration(Z) --> "char", whitespace, chars(A),"[]", whitespace, "=", whitespace, "'", string(B), "'", whitespace,";",       {concat_atom(['\n',A,': db ','"',B,'",0'],Z)}.
 
 % Bia³e znaki.
 whitespace --> " ", whitespace.
