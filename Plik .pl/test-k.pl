@@ -29,17 +29,12 @@ readFromFile(File, Output) :-
 
 %program(Z) --> declaration(Za), {concat_atom([Za], Z)}.
 
-program(Z) --> func(Z1),whitespace, func(Z2), {concat_atom([Z1,Z2,'\nint 0x80'],Z)}.
-
-program(Z) --> func(Z1), whitespace, {concat_atom([Z1,'\nint 0x80'],Z)}.
+program(Z) --> func(Z1), {concat_atom([Z1],Z)}.
 
 
 %operacje w funkcjach
 
-func(Z) --> type_name,whitespace,chars(Z1),whitespace,"()",whitespace, "{", whitespace,declarations(Z3),func_exp_s(Z2),whitespace,whitespace,"}", {concat_atom(['SECTION .data',Z3,'\nSECTION .text\nglobal ',Z1,'\n',Z1,':\n',Z2], Z)}.
-
-func(Z) --> type_name,whitespace,chars(Z1),whitespace,"()",whitespace, "{", whitespace,"}", {concat_atom(['\n',Z1,':\n'], Z)}.
-
+func(Z) --> type_name,whitespace,chars(Z1),whitespace,"()",whitespace, "{", whitespace, func_exp_s(Z2),whitespace,"}", {concat_atom([Z1,':\n', Z2], Z)}.
 
 % func_exp(Z) --> declaration(Z1),whitespace, if(Z2),
 % {concat_atom([Z1,Z2],Z)}.
@@ -51,19 +46,21 @@ func_exp_s(Z) --> func_exp(Za),whitespace, func_exp(Zb), {concat_atom([Za,Zb], Z
 
 func_exp_s(Z) --> func_exp(Za), {concat_atom([Za],Z)}.
 
-declarations(Z) --> declaration(Za), {concat_atom([Za], Z)}| declaration(Za), whitespace,declarations(Zb),whitespace,  {concat_atom([Za,Zb], Z)}.
-% declarations(Z) --> declaration(Za),
-% whitespace,declaration(Zb),whitespace, {concat_atom([Za,Zb], Z)}.
+func_exp(Z) --> declaration(Za), {concat_atom([Za], Z)}.
+func_exp(Z) --> declaration(Za), whitespace, func_exp(Zb),  {concat_atom([Za,Zb], Z)}.
 
 func_exp(Z) --> if(Za), {concat_atom([Za], Z)}.
 func_exp(Z) --> if(Za),whitespace,func_exp(Zb), {concat_atom([Za,Zb], Z)}.
 
 func_exp(Z) --> exp(Za), {concat_atom([Za],Z)}.
 func_exp(Z) --> exp(Za), func_exp(Zb), {concat_atom([Za,Zb],Z)}.
-func_execute(Z) --> chars(Za),"();",{concat_atom(['\ncall ',Za,'\n'],Z)}.
+%wywo³ywanie funkcji - nie dzia³a
+%func_exp(Z) --> func_execute(Za),{concat_atom([Za],Z)}.
+% func_exp(Z) --> func_execute(Za), func_exp(Zb),
+% {concat_atom([Za,Zb],Z)}.
 
-%operacjearytmetyczne
-%dodawanie
+% func_execute(Z) --> chars(Za),"();",{concat_atom(['\ncall
+% ',Za,"\n"],Z)}. operacje arytmetyczne dodawanie
 
 add(Z) --> whitespace, chars(C), whitespace, "=",whitespace, chars(A),whitespace,add_op,whitespace, chars(B),whitespace,";", {concat_atom(['\nmov eax, [',A,']\nadd eax, [',B,']\nmov [',C,'], eax\n'],Z)}.
 
@@ -142,15 +139,6 @@ exp(Z) --> mul(Za), exp(Zb), {concat_atom([Za,'\n',Zb], Z)}.
 exp(Z) --> equal(Za), {concat_atom([Za], Z)}.
 exp(Z) --> equal(Za), exp(Zb), {concat_atom([Za,'\n',Zb], Z)}.
 
-%exp(Z) --> declarations(Za), {concat_atom([Za], Z)}.
-%exp(Z) --> declaration(Za), exp(Zb), {concat_atom([Za,'\n',Zb], Z)}.
-
-%wywo³ywanie funkcji - nie dzia³a
-exp(Z) --> func_execute(Za),{concat_atom([Za],Z)}.
-exp(Z) --> func_execute(Za), exp(Zb), {concat_atom([Za,Zb],Z)}.
-
-
-
 type_name --> "int".
 type_name --> "char".
 type_name --> "void".
@@ -160,7 +148,6 @@ declaration(Z) --> "int", whitespace, chars(A), whitespace, "=", whitespace, int
 declaration(Z) --> "char", whitespace, chars(A), whitespace, "=", whitespace, "'", char(B), "'", whitespace,";",       {concat_atom(['\n',A,': db ','"',B,'"'],Z)}.
 
 declaration(Z) --> "char", whitespace, chars(A),"[]", whitespace, "=", whitespace, "'", string(B), "'", whitespace,";",       {concat_atom(['\n',A,': db ','"',B,'",0'],Z)}.
-%declaration(Z)-->whitespace, {concat_atom([],Z)}.
 
 % Bia³e znaki.
 whitespace --> " ", whitespace.
