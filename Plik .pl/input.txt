@@ -1,18 +1,4 @@
 int main () {
-int x = 3;
-int c = 0;
-int b = 0;
-int a = 0;
-int s = 4;
-if( x == 3)
-{
-x = 4;
-x = a +b;
-x = b-a;
-x= c/a;
-x = s;
+printf("Wynik");
 
 }
- 
-}
- 

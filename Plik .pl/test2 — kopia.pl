@@ -11,7 +11,7 @@ readFromFile(File, Output) :-
 
 %program(Z) --> code(Za), {concat_atom([Za], Z)}.
 
-%tymczasowe wywolanei dla testów
+%tymczasowe wywolanei dla testÃ³w
 
 %program(Z) --> add(Za), {concat_atom([Za], Z)}.
 
@@ -29,18 +29,35 @@ readFromFile(File, Output) :-
 
 %program(Z) --> declaration(Za), {concat_atom([Za], Z)}.
 
-program(Z) --> printf(Z1,Z2), {concat_atom([Z1],Z), concat_atom([Z2],Z)}.
+%program(Z) --> printf(Z1,Z2), {concat_atom([Z1,Z2],Z)}.
 
-%poni¿sze dzia³a ok
- program(Z) --> func(Z1),whitespace, func(Z2),whitespace,
- {concat_atom([Z1,Z2,'\nint 0x80\nret'],Z)}|func(Z1), whitespace,
- {concat_atom([Z1,'\nint 0x80\nret'],Z)}.
+%program(Z) --> main_printf(Za,Zb),{concat_atom([Za,Zb], Z)}.
+%
+
+
+printf(Za,Zb) --> "printf",whitespace,"(",whitespace,main_printf(C1,C2),whitespace,")",whitespace,";",{concat_atom([C1],Za),concat_atom([C2],Zb)}.
+
+
+main_printf(Ca,Cb)-->"\"",whitespace,exp_to_printf(Z1),"\"",whitespace,",",whitespace,printf_char(Z2),whitespace,{concat_atom(['\nmsg',' \"',Z1,'\"'],Ca), concat_atom(['\nmov [',Z2,']',',','eax','\npush eax\npush dword msg\ncall _printf'],Cb)}.
+
+printf_char(C) --> chars(C1),{concat_atom([C1],C)}.
+
+exp_to_printf(C) --> chars(Z1),whitespace,"=",whitespace,"%d",whitespace,{concat_atom([Z1,' =',' %d'],C)}.
+
+
+
+
+%PoniÅ¼sze dziaÅ‚a ok
+program(Za) --> func(Z1,Z2,Z3),whitespace, func(Z4,Z5,Z6),whitespace, {concat_atom(['\nglobal _',Z1,'\nglobal _',Z4,'\nextern _printf','\nSECTION .data','\n',Z2,'\n',Z5,'\nSECTION .text\n','\n_',Z1,':','\npush ebp\nmov ebp,esp',Z3,'\nmov esp, ebp \npop ebp','\n_',Z4,':\npush ebp\nmov ebp,esp\n',Z6,'\nmov esp, ebp \npop ebp','\nint 0x80\nret'],Za)}
+|func(Z1,Z2,Z3), whitespace,{concat_atom(['\nglobal _',Z1,'\nextern _printf','\nSECTION% .data','\n',Z2,'\nSECTION .text\n_',Z1,':\n','\nmov esp, ebp \npop ebp',Z3,'\nmov esp, ebp \npop ebp','\nint 0x80\nret'],Za)}
+|func(Z1,Z2,Z3),whitespace,{concat_atom([Z1,':\n',Z2,Z3],Za)}.
+
 
 %operacje w funkcjach
 
-func(Z) --> type_name,whitespace,chars(Z1),whitespace,"()",whitespace, "{", whitespace,declarations(Z3),whitespace,func_exp_s(Z2),whitespace,whitespace,"}", {concat_atom(['\nglobal _',Z1,'\nextern _printf','\nSECTION .data',Z3,'\nSECTION .text\n\n_',Z1,':\n',Z2], Z)}.
+func(Za,Zb,Zc) --> type_name,whitespace,chars(Z1),whitespace,"()",whitespace, "{", whitespace,declarations(Z2),whitespace,func_exp_s(Z3),whitespace,whitespace,"}", {concat_atom([Z1],Za),concat_atom([Z2],Zb),concat_atom([Z3],Zc)}.
 
-func(Z) --> type_name,whitespace,chars(Z1),whitespace,"()",whitespace, "{", whitespace,"}", {concat_atom(['\n',Z1,':\n'], Z)}.
+func(Za,Zb,Zc) --> type_name,whitespace,chars(Z1),whitespace,"()",whitespace, "{", whitespace,"}", {concat_atom([Z1], Za),concat_atom([''], Zb),concat_atom([''], Zc)}.
 
 % func_exp(Z) --> declaration(Z1),whitespace, if(Z2),
 % {concat_atom([Z1,Z2],Z)}.
@@ -48,9 +65,9 @@ func(Z) --> type_name,whitespace,chars(Z1),whitespace,"()",whitespace, "{", whit
 % func_exp(Z) --> func_exp(Z1), whitespace, func_exp(Z2),
 % {concat_atom([Z1,Z2],Z)}.
 
-func_exp_s(Z) --> func_exp(Za),whitespace, func_exp(Zb), {concat_atom([Za,Zb], Z)}.
+func_exp_s(Z) --> func_exp(Za),whitespace, func_exp(Zb), {concat_atom([Za,Zb], Z)}| func_exp(Za), {concat_atom([Za],Z)}.
 
-func_exp_s(Z) --> func_exp(Za), {concat_atom([Za],Z)}.
+
 
 declarations(Z) --> declaration(Za), {concat_atom([Za], Z)}| declaration(Za), whitespace,declarations(Zb),whitespace,  {concat_atom([Za,Zb], Z)}.
 % declarations(Z) --> declaration(Za),
@@ -65,8 +82,9 @@ func_execute(Z) --> chars(Za),"();",{concat_atom(['\ncall ',Za,'\n'],Z)}.
 
 %printf
 
-printf(Z1,Z2) --> "printf",whitespace,"(",whitespace,printf_exp(Za,Zb),whitespace,")",{concat_atom([Za],Z1),concat_atom([Zb],Z2)}.
-printf_exp(Z1,Z2) --> cudzyslow, chars(Za), cudzyslow,",",chars(Zb),{concat_atom([Za],Z1),concat_atom([Zb],Z2)}.
+% printf_exp(Z1,Z2) --> cudzyslow,
+% chars(Za),cudzyslow,",",chars(Zb),{concat_atom([Za],Z1),concat_atom([Zb],Z2)}.
+%
 
 %operacjearytmetyczne
 %dodawanie
@@ -94,7 +112,7 @@ equal(Z) --> whitespace, chars(A), whitespace, "=", whitespace, integer_number(B
 
 %instrukcje warunkowe
 if(Z) --> "if",whitespace,"(",whitespace,if_cond(Za),whitespace,")",whitespace,"{",whitespace,exp_if(Zb),whitespace,"}", {concat_atom([Za,Zb],Z)}.
-%zak³adam, ¿e mo¿emy porównywaæ tylko liczby w postaci if(x>5)
+%zakÅ‚adam, Å¼e moÅ¼emy porÃ³wnywaÄ‡ tylko liczby w postaci if(x>5)
 
 %if(x>5)
 if_cond(Z) --> chars(A),whitespace,cond_op_greater,whitespace,integer_number(B), {concat_atom(['mov eax, [',A,']\ncmp eax, ',B,'\njg klamra'],Z)}.
@@ -121,8 +139,8 @@ cond_op_equal_to --> "==".
 
 cudzyslow --> "\"".
 
-% exp to ka¿de mo¿liwe wyra¿enie, które siê moze pojawiæ, nale¿a³oby
-% zdefiniowaæ kilka(naœcie lub set) mo¿liwoœci
+% exp to kaÅ¼de moÅ¼liwe wyraÅ¼enie, ktÃ³re siÄ™ moze pojawiÄ‡, naleÅ¼aÅ‚oby
+% zdefiniowaÄ‡ kilka(naÅ›cie lub set) moÅ¼liwoÅ›ci
 
 exp_if(Z) --> exp(Za),whitespace, exp(Zb), {concat_atom(['\n\nklamra:\n',Za,'\n',Zb],Z)}.
 
@@ -153,7 +171,7 @@ exp(Z) --> equal(Za), exp(Zb), {concat_atom([Za,'\n',Zb], Z)}.
 %exp(Z) --> declarations(Za), {concat_atom([Za], Z)}.
 %exp(Z) --> declaration(Za), exp(Zb), {concat_atom([Za,'\n',Zb], Z)}.
 
-%wywo³ywanie funkcji - nie dzia³a
+%wywoÅ‚ywanie funkcji - nie dziaÅ‚a
 exp(Z) --> func_execute(Za),{concat_atom([Za],Z)}.
 exp(Z) --> func_execute(Za), exp(Zb), {concat_atom([Za,Zb],Z)}.
 
@@ -170,18 +188,18 @@ declaration(Z) --> "char", whitespace, chars(A), whitespace, "=", whitespace, "'
 declaration(Z) --> "char", whitespace, chars(A),"[]", whitespace, "=", whitespace, "'", string(B), "'", whitespace,";",       {concat_atom(['\n',A,': db ','"',B,'",0'],Z)}.
 %declaration(Z)-->whitespace, {concat_atom([],Z)}.
 
-% Bia³e znaki.
+% BiaÅ‚e znaki.
 whitespace --> " ", whitespace.
 whitespace --> "\t", whitespace.
 whitespace --> "\n", whitespace.
 whitespace --> "".
 
-%liczby ca³kowite
+%liczby caÅ‚kowite
 integer_number(I) --> digit(I1), integer_number(Rest), {concat_atom([I1,Rest], I)}.
 integer_number(I) --> digit(I).
 digit(I) --> [I1], {code_type(I1, digit), atom_codes(I, [I1])}.
 
-%ci¹gi znaków
+%ciÄ…gi znakÃ³w
 string(C) --> chars(C).
 
 chars(C) --> char(C1), chars(Rest), {concat_atom([C1, Rest], C)}.
