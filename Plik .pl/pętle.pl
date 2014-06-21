@@ -1,6 +1,7 @@
 
  execute :-
-        readFromFile("D:\\Projekty\\Przetwornik-DCG-C-do-asm-Filip\\Plik .pl\\input.txt", R),
+        readFromFile("D:\\Projekty\\Przetwornik-DCG-C-do-asm-Filip\\Plik .pl\\input2.txt", R),
+		print('org 100h'),
         program(Z, R, []),
 	write(Z), !.
 
@@ -131,13 +132,13 @@ dwcond(Z) --> chars(A), whitespace, cond_op_greater, whitespace, integer_number(
 %petla for
 for(Z) --> "for", whitespace, "(", whitespace, for1cond(Za), whitespace, ";", whitespace, for2cond(Zb), whitespace, ";", whitespace, for3cond(Zc), whitespace, ")", whitespace, "{", whitespace, loop_exp(Zd), whitespace, "}", {concat_atom([Za, '\nfor:\n', Zd, Zc, Zb], Z)}.
 
-for1cond(Z) --> chars(A), whitespace, "=", whitespace, integer_number(B), {concat_atom(['\nmov [', A, '],', B], Z)}.
+for1cond(Z) --> chars(A), whitespace, "=", whitespace, integer_number(B), {concat_atom(['\nmov eax, [', A, ']\nmov eax, ', B, '\nmov [i], eax'], Z)}.
 
-for2cond(Z) --> chars(A), whitespace, cond_op_equal_to, whitespace, integer_number(Y), {concat_atom(['\nmov eax, [', A, ']\ncmp eax,', Y, '\nje for:'], Z)}.
-for2cond(Z) --> chars(A), whitespace, cond_op_less, whitespace, integer_number(Y), {concat_atom(['\nmov eax, [', A, ']\ncmp eax,', Y, '\njl for:'], Z)}.
-for2cond(Z) --> chars(A), whitespace, cond_op_greater, whitespace, integer_number(Y), {concat_atom(['\nmov eax, [', A, ']\ncmp eax,', Y, '\njg for:'], Z)}.
+for2cond(Z) --> chars(A), whitespace, cond_op_equal_to, whitespace, integer_number(Y), {concat_atom(['\nmov eax, [', A, ']\ncmp eax,', Y, '\nje for'], Z)}.
+for2cond(Z) --> chars(A), whitespace, cond_op_less, whitespace, integer_number(Y), {concat_atom(['\nmov eax, [', A, ']\ncmp eax,', Y, '\njl for'], Z)}.
+for2cond(Z) --> chars(A), whitespace, cond_op_greater, whitespace, integer_number(Y), {concat_atom(['\nmov eax, [', A, ']\ncmp eax,', Y, '\njg for'], Z)}.
 
-for3cond(Z) --> chars(A), whitespace, "=", whitespace, chars(B), whitespace, "+", whitespace, integer_number(C), {concat_atom(['\nmov eax, [', A, ']\n add [', B, '], ', C, 'mov [', A, '], eax'], Z)}.
+for3cond(Z) --> chars(A), whitespace, "=", whitespace, chars(B), whitespace, "+", whitespace, integer_number(C), {concat_atom(['\nmov eax, [', A, ']\nadd eax, ', C, '\nmov [', A, '], eax'], Z)}.
 
 loop_exp(Z) --> exp(Za), whitespace, exp(Zb), {concat_atom([Za, Zb], Z)}.
 loop_exp(Z) --> exp(Za), {concat_atom([Za], Z)}.
