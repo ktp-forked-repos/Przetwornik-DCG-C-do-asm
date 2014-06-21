@@ -110,11 +110,13 @@ if_cond(Z) --> chars(A),whitespace,cond_op_less,whitespace,integer_number(B), {c
 %if(x==5)
 if_cond(Z) --> chars(A),whitespace,cond_op_equal_to,whitespace,integer_number(B), {concat_atom(['mov eax, [',A,']\ncmp eax, ',B,'\njz klamra\n'],Z)}.
 
-while(Z) --> "while", whitespace, "(",whitespace, chars(A), whitespace, cond_op_equal_to,whitespace, integer_number(B), whitespace, ")", whitespace, "{", whitespace, loop_exp(Za), whitespace, "}", {concat_atom(['\nwh:\nmov eax, [', A, ']\ncmp eax, ', B, '\npush f\n', Za, '\npop f\n je wh'], Z)}.
+while(Z) --> "while", whitespace, "(",whitespace, chars(A), whitespace, cond_op_equal_to,whitespace, integer_number(B), whitespace, ")", whitespace, "{", whitespace, loop_exp(Za), whitespace, "}", {concat_atom(['\nwhloop:\nmov eax, [', A, ']\ncmp eax, ', B, '\njne whendloop\n', Za, '\njmp whloop\nwh_endloop:'], Z)}.
 
-while(Z) --> "while", whitespace, "(",whitespace, chars(A), whitespace, cond_op_less,whitespace, integer_number(B), whitespace, ")", whitespace, "{", whitespace, loop_exp(Za), whitespace, "}", {concat_atom(['\nwh:\nmov eax, [', A, ']\ncmp eax, ', B, '\npush f\n', Za, '\npop f\n jl wh'], Z)}.
+while(Z) --> "while", whitespace, "(",whitespace, chars(A), whitespace, cond_op_not_equal_to,whitespace, integer_number(B), whitespace, ")", whitespace, "{", whitespace, loop_exp(Za), whitespace, "}", {concat_atom(['\nwhloop:\nmov eax, [', A, ']\ncmp eax, ', B, '\nje whendloop\n', Za, '\njmp whloop\nwh_endloop:'], Z)}.
 
-while(Z) --> "while", whitespace, "(",whitespace, chars(A), whitespace, cond_op_greater,whitespace, integer_number(B), whitespace, ")", whitespace, "{", whitespace, loop_exp(Za), whitespace, "}", {concat_atom(['\nwh:\nmov eax, [', A, ']\ncmp eax, ', B, '\npush f\n', Za, '\npop f\n jg wh'], Z)}.
+while(Z) --> "while", whitespace, "(",whitespace, chars(A), whitespace, cond_op_less,whitespace, integer_number(B), whitespace, ")", whitespace, "{", whitespace, loop_exp(Za), whitespace, "}", {concat_atom(['\nwhloop:\nmov eax, [', A, ']\ncmp eax, ', B, '\njnl whendloop\n', Za, '\njmp whloop\nwhendloop:'], Z)}.
+
+while(Z) --> "while", whitespace, "(",whitespace, chars(A), whitespace, cond_op_greater,whitespace, integer_number(B), whitespace, ")", whitespace, "{", whitespace, loop_exp(Za), whitespace, "}", {concat_atom(['\nwhloop:\nmov eax, [', A, ']\ncmp eax, ', B, '\nje whendloop\n', Za, '\njmp whloop\nwhendloop:'], Z)}.
 
 while(Z) --> "while", whitespace, "(", whitespace, "true", whitespace, ")", whitespace, "{", whitespace, loop_exp(Za), whitespace, "}", {concat_atom(['\nwh:', Za, '\n jmp wh'], Z)}.
 
@@ -138,7 +140,7 @@ for2cond(Z) --> chars(A), whitespace, cond_op_equal_to, whitespace, integer_numb
 for2cond(Z) --> chars(A), whitespace, cond_op_less, whitespace, integer_number(Y), {concat_atom(['\nmov eax, [', A, ']\ncmp eax,', Y, '\njl for'], Z)}.
 for2cond(Z) --> chars(A), whitespace, cond_op_greater, whitespace, integer_number(Y), {concat_atom(['\nmov eax, [', A, ']\ncmp eax,', Y, '\njg for'], Z)}.
 
-for3cond(Z) --> chars(A), whitespace, "=", whitespace, chars(B), whitespace, "+", whitespace, integer_number(C), {concat_atom(['\nmov eax, [', A, ']\nadd eax, ', C, '\nmov [', A, '], eax'], Z)}.
+for3cond(Z) --> chars(A), whitespace, "=", whitespace, chars(A), whitespace, "+", whitespace, integer_number(C), {concat_atom(['\nmov eax, [', A, ']\nadd eax, ', C, '\nmov [', A, '], eax'], Z)}.
 
 loop_exp(Z) --> exp(Za), whitespace, exp(Zb), {concat_atom([Za, Zb], Z)}.
 loop_exp(Z) --> exp(Za), {concat_atom([Za], Z)}.
@@ -156,6 +158,8 @@ cond_op_greater --> ">".
 cond_op_less --> "<".
 %cond_op_less_or_equal --> "<=".
 cond_op_equal_to --> "==".
+
+cond_op_not_equal_to --> "!=".
 
 % exp to ka¿de mo¿liwe wyra¿enie, które siê moze pojawiæ, nale¿a³oby
 % zdefiniowaæ kilka(naœcie lub set) mo¿liwoœci
