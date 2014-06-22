@@ -116,20 +116,22 @@ while(Z) --> "while", whitespace, "(",whitespace, chars(A), whitespace, cond_op_
 
 while(Z) --> "while", whitespace, "(",whitespace, chars(A), whitespace, cond_op_less,whitespace, integer_number(B), whitespace, ")", whitespace, "{", whitespace, loop_exp(Za), whitespace, "}", {concat_atom(['\nwhloop:\nmov eax, [', A, ']\ncmp eax, ', B, '\njnl whendloop\n', Za, '\njmp whloop\nwhendloop:'], Z)}.
 
-while(Z) --> "while", whitespace, "(",whitespace, chars(A), whitespace, cond_op_greater,whitespace, integer_number(B), whitespace, ")", whitespace, "{", whitespace, loop_exp(Za), whitespace, "}", {concat_atom(['\nwhloop:\nmov eax, [', A, ']\ncmp eax, ', B, '\nje whendloop\n', Za, '\njmp whloop\nwhendloop:'], Z)}.
+while(Z) --> "while", whitespace, "(",whitespace, chars(A), whitespace, cond_op_greater,whitespace, integer_number(B), whitespace, ")", whitespace, "{", whitespace, loop_exp(Za), whitespace, "}", {concat_atom(['\nwhloop:\nmov eax, [', A, ']\ncmp eax, ', B, '\njng whendloop\n', Za, '\njmp whloop\nwhendloop:'], Z)}.
 
 while(Z) --> "while", whitespace, "(", whitespace, "true", whitespace, ")", whitespace, "{", whitespace, loop_exp(Za), whitespace, "}", {concat_atom(['\nwh:', Za, '\n jmp wh'], Z)}.
 
 
 
 %pêtla do-while
-dowhile(Z) --> "do", whitespace, "{", whitespace, loop_exp(Za), whitespace, "}", whitespace, "while", whitespace, "(", whitespace, dwcond(Zb), whitespace, ")", whitespace, ";", {concat_atom(['\ndowh:\n', Za, Zb], Z)}.
+dowhile(Z) --> "do", whitespace, "{", whitespace, loop_exp(Za), whitespace, "}", whitespace, "while", whitespace, "(", whitespace, dwcond(Zb), whitespace, ")", whitespace, ";", {concat_atom(['\ndowhloop:\n', Za, Zb], Z)}.
 
-dwcond(Z) --> chars(A), whitespace, cond_op_equal_to, whitespace, integer_number(B), {concat_atom(['mov eax, [', A, ']\ncmp eax, ', B, '\n je dowh'], Z)}.
+dwcond(Z) --> chars(A), whitespace, cond_op_equal_to, whitespace, integer_number(B), {concat_atom(['mov eax, [', A, ']\ncmp eax, ', B, '\n je dowhloop'], Z)}.
 
-dwcond(Z) --> chars(A), whitespace, cond_op_less, whitespace, integer_number(B), {concat_atom(['mov eax, [', A, ']\ncmp eax, ', B, '\n jl dowh'], Z)}.
+dwcond(Z) --> chars(A), whitespace, cond_op_not_equal_to, whitespace, integer_number(B), {concat_atom(['mov eax, [', A, ']\ncmp eax, ', B, '\n jne dowhloop'], Z)}.
 
-dwcond(Z) --> chars(A), whitespace, cond_op_greater, whitespace, integer_number(B), {concat_atom(['mov eax, [', A, ']\ncmp eax, ', B, '\n jg dowh'], Z)}.
+dwcond(Z) --> chars(A), whitespace, cond_op_less, whitespace, integer_number(B), {concat_atom(['mov eax, [', A, ']\ncmp eax, ', B, '\n jl dowhloop'], Z)}.
+
+dwcond(Z) --> chars(A), whitespace, cond_op_greater, whitespace, integer_number(B), {concat_atom(['mov eax, [', A, ']\ncmp eax, ', B, '\n jg dowhloop'], Z)}.
 
 %petla for
 for(Z) --> "for", whitespace, "(", whitespace, for1cond(Za), whitespace, ";", whitespace, for2cond(Zb), whitespace, ";", whitespace, for3cond(Zc), whitespace, ")", whitespace, "{", whitespace, loop_exp(Zd), whitespace, "}", {concat_atom([Za, '\nfor:\n', Zd, Zc, Zb], Z)}.
